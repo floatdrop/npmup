@@ -27,13 +27,15 @@ module.exports = function (source, url) {
 
         if (!keys.length) { console.log('\t No changes'); return; }
 
+        var safe = true;
+
         keys.forEach(function (key) {
             var d = diff[key];
             var color = chalk.gray;
 
             if (d.patch) { color = chalk.green; }
-            if (d.minor) { color = chalk.yellow; }
-            if (d.major) { color = chalk.red; }
+            if (d.minor) { color = chalk.yellow; safe = false; }
+            if (d.major) { color = chalk.red; safe = false; }
 
             console.log('\t' + color(key) + ': ' + d.version + ' -> ' + d.newVersion);
         });
@@ -41,6 +43,7 @@ module.exports = function (source, url) {
         inquirer.prompt([{
             type: 'confirm',
             name: 'merge',
+            default: safe,
             message: 'Are you sure to merge this changes?'
         }], function (answer) {
             if (answer.merge) {
