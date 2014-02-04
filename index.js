@@ -23,7 +23,11 @@ module.exports = function (source, url) {
 
         console.log(chalk.gray(path.relative(__dirname, source)));
 
-        Object.keys(diff).forEach(function (key) {
+        var keys = Object.keys(diff);
+
+        if (!keys.length) { console.log('\t No changes'); return; }
+
+        keys.forEach(function (key) {
             var d = diff[key];
             var color = chalk.gray;
 
@@ -40,7 +44,7 @@ module.exports = function (source, url) {
             message: 'Are you sure to merge this changes?'
         }], function (answer) {
             if (answer.merge) {
-                _.assign(sourceJson, destJson.dependencies);
+                _.assign(sourceJson.dependencies, destJson.dependencies);
                 fs.writeFileSync(source, JSON.stringify(sourceJson, undefined, 2));
             }
         });
