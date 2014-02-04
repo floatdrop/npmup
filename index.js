@@ -8,7 +8,7 @@ var fs = require('fs'),
     _ = require('lodash'),
     path = require('path');
 
-module.exports = function (source, url) {
+module.exports = function (source, url, cb) {
     var sourceJson = JSON.parse(fs.readFileSync(source));
 
     request(url, function (error, response, body) {
@@ -50,6 +50,7 @@ module.exports = function (source, url) {
                 _.assign(sourceJson.dependencies, destJson.dependencies);
                 fs.writeFileSync(source, JSON.stringify(sourceJson, undefined, 2));
             }
+            if (cb) { cb(); }
         });
     });
 };
