@@ -25,7 +25,7 @@ module.exports = function (source, url, cb) {
 
         var keys = Object.keys(diff);
 
-        if (!keys.length) { console.log('\t No changes'); return; }
+        if (!keys.length) { console.log('  No changes'); return cb ? cb() : null; }
 
         var safe = true;
 
@@ -37,7 +37,7 @@ module.exports = function (source, url, cb) {
             if (d.minor) { color = chalk.yellow; safe = false; }
             if (d.major) { color = chalk.red; safe = false; }
 
-            console.log('\t' + color(key) + ': ' + d.version + ' -> ' + d.newVersion);
+            console.log('  ' + color(key) + ': ' + d.version + ' -> ' + d.newVersion);
         });
 
         inquirer.prompt([{
