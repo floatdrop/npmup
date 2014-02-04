@@ -1,7 +1,7 @@
 {
   "name": "update-my-deps",
   "version": "0.0.0",
-  "description": "update-my-deps ==============",
+  "description": "update-my-deps",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -15,5 +15,12 @@
   "bugs": {
     "url": "https://github.com/floatdrop/update-my-deps/issues"
   },
-  "homepage": "https://github.com/floatdrop/update-my-deps"
+  "homepage": "https://github.com/floatdrop/update-my-deps",
+  "dependencies": {
+    "chalk": "~0.4.0",
+    "dependencies-diff": "0.0.2",
+    "request": "~2.33.0",
+    "inquirer": "~0.4.0",
+    "lodash": "~2.4.1"
+  }
 }
