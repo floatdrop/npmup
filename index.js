@@ -21,7 +21,7 @@ module.exports = function (source, url, cb) {
 
         var diff = dd(sourceJson.dependencies, destJson.dependencies);
 
-        console.log(chalk.gray(path.relative(__dirname, source)));
+        console.log(chalk.gray(path.relative(process.cwd(), source)));
 
         var keys = Object.keys(diff);
 
