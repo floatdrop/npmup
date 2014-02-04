@@ -41,7 +41,7 @@ module.exports = function (source, url) {
         }], function (answer) {
             if (answer.merge) {
                 _.assign(sourceJson, destJson.dependencies);
-                fs.writeFileSync(source, sourceJson);
+                fs.writeFileSync(source, JSON.stringify(sourceJson, undefined, 2));
             }
         });
     });
