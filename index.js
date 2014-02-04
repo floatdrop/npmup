@@ -27,9 +27,12 @@ module.exports = function (source, url, cb) {
 
         if (!keys.length) { console.log('  No changes'); return cb ? cb() : null; }
 
-        var safe = true;
+        var safe = true,
+            deps = {};
 
         keys.forEach(function (key) {
+            deps[key] = destJson.dependencies[key];
+
             var d = diff[key];
             var color = chalk.gray;
 
@@ -47,7 +50,7 @@ module.exports = function (source, url, cb) {
             message: 'Are you sure to merge this changes?'
         }], function (answer) {
             if (answer.merge) {
-                _.assign(sourceJson.dependencies, destJson.dependencies);
+                _.assign(sourceJson.dependencies, deps);
                 fs.writeFileSync(source, JSON.stringify(sourceJson, undefined, 2));
             }
             if (cb) { cb(); }
