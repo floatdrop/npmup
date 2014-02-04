@@ -1,0 +1,19 @@
+{
+  "name": "update-my-deps",
+  "version": "0.0.0",
+  "description": "update-my-deps ==============",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/floatdrop/update-my-deps.git"
+  },
+  "author": "Vsevolod Strukchinsky <floatdrop@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/floatdrop/update-my-deps/issues"
+  },
+  "homepage": "https://github.com/floatdrop/update-my-deps"
+}
