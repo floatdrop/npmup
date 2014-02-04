@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "bem-bl": "git://github.com/bem/bem-bl.git#0.3.12",
+    "bem-bl-bh": "git://github.yandex-team.ru/bh/bem-bl-bh.git",
+    "bem-components": "git://github.com/bem/bem-components.git#v2.0.0"
+  }
+}
