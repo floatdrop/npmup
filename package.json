@@ -1,6 +1,6 @@
 {
   "name": "update-my-deps",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "update-my-deps",
   "main": "index.js",
   "scripts": {
