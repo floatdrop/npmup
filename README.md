@@ -1,6 +1,10 @@
 # update-my-deps [![NPM version][npm-image]][npm-url]
 > Cli tool to update dependencies in json files
 
+<p align="center">
+    <img src="https://f.cloud.github.com/assets/365089/2074077/9432f5e2-8d70-11e3-8ad8-f55c5edebaf7.png" />
+</p>
+
 ## Example
 
 ```js
