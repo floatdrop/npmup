@@ -12,7 +12,12 @@ To keep things simple - this will update only **strict fixed** versions.
 ```js
 var umd = require('update-my-deps');
 
-umd('package.json', 'https://raw.github.com/floatdrop/update-my-deps/master/package.json', function () { console.log('done'); });
+umd(
+    'package.json', 
+    'https://raw.github.com/floatdrop/update-my-deps/master/package.json', 
+    function () { 
+        console.log('done'); 
+});
 ```
 
 [npm-url]: https://npmjs.org/package/update-my-deps
