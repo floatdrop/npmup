@@ -1,59 +1,106 @@
 'use strict';
 
-var fs = require('fs'),
-    request = require('request'),
-    dd = require('dependencies-diff'),
+var fs = Promise.promisifyAll(require('fs')),
+    needle = Promise.promisifyAll(require('needle')),
+    Promise = require('bluebird'),
     chalk = require('chalk'),
-    inquirer = require('inquirer'),
-    _ = require('lodash'),
-    path = require('path');
+    path = require('path'),
+    url = require('url');
 
-module.exports = function (source, url, cb) {
-    var sourceJson = JSON.parse(fs.readFileSync(source));
+var registry = url.parse(process.env.NPM_REGISTRY || 'https://registry.npmjs.org');
 
-    request(url, function (error, response, body) {
-        if (error) {
-            console.error(error);
-            return;
+function parseJson(response) {
+    return new Promise(function (resolve, reject) {
+        try {
+            resolve(JSON.parse(response.body));
+        } catch (e) {
+            reject(e);
         }
+    });
+}
 
-        var destJson = JSON.parse(body);
+function getDependencies(json) {
+    return new Promise(function (resolve, reject) {
+        if (!json.dependencies) { return reject(new Error('Dependencies not found')); }
+        resolve(json.dependencies);
+    });
+}
 
-        var diff = dd(sourceJson.dependencies, destJson.dependencies);
+function getSourceDependencies(source) {
+    return fs.readFileAsync(source)
+        .then(getDependencies);
+}
 
-        console.log(chalk.gray(path.relative(process.cwd(), source)));
+function getFreshJsons(dependencies) {
+    return Promise.all(Object.keys(dependencies).map(function (index) {
+        registry.pathname = index;
+        return needle.getAsync(url.format(registry))
+            .then(parseJson)
+            .then(function (json) {
+                dependencies[index] = json;
+            });
+    })).then(function () {
+        return dependencies;
+    });
+}
 
-        var keys = Object.keys(diff);
+function filterFresh(results) {
+    var fresh = {};
+    Object.keys(results.local).map(function (index) {
+        if (!(index in results.fresh)) { fresh[index] = results.local[index]; }
+        var versions = Object.keys[results.fresh[index]];
+        fresh[index] = versions.pop(); // Get last version for now
+    });
+}
 
-        if (!keys.length) { console.log('  No changes'); return cb ? cb() : null; }
+function showDiff(results) {
+    console.log(chalk.gray(path.relative(process.cwd(), results.source)));
+    Object.keys(results.local).forEach(function (index) {
+        console.log(index + ': ' + results.local[index] + ' -> ' + results.fresh[index]);
+    });
+}
 
-        var safe = true,
-            deps = {};
-
-        keys.forEach(function (key) {
-            deps[key] = destJson.dependencies[key];
-
-            var d = diff[key];
-            var color = chalk.gray;
-
-            if (d.patch) { color = chalk.green; }
-            if (d.minor) { color = chalk.yellow; safe = false; }
-            if (d.major) { color = chalk.red; safe = false; }
-
-            console.log('  ' + color(key) + ': ' + d.version + ' -> ' + d.newVersion);
-        });
-
-        inquirer.prompt([{
+function promptUser(results) {
+    return new Promise(function (resolve, reject) {
+        require('inquirer').prompt([{
             type: 'confirm',
             name: 'merge',
-            default: safe,
+            default: results.safe,
             message: 'Are you sure to merge this changes?'
         }], function (answer) {
             if (answer.merge) {
-                _.assign(sourceJson.dependencies, deps);
-                fs.writeFileSync(source, JSON.stringify(sourceJson, undefined, 2));
+                return resolve(results);
             }
-            if (cb) { cb(); }
+            reject(new Error('Cancelled'));
         });
     });
+}
+
+function merge() {
+
+}
+
+module.exports = function (source, url) {
+    var remoteDeps = needle.getAsync(url)
+        .then(parseJson)
+        .then(getDependencies);
+
+    return Promise.all({
+        remote: remoteDeps,
+        fresh: getSourceDependencies(source).then(getFreshJsons),
+        local: getSourceDependencies(source),
+        source: source
+    })
+    .then(filterFresh)
+    .then(showDiff)
+    /*.then(promptUser)
+    .then(merge)
+    .then(function (results) {
+        return fs.readFileAsync(source)
+            .then(parseJson)
+            .then(function (json) {
+                json.dependencies = results.merged;
+                return fs.writeFileAsync(source, JSON.stringify(json, undefined, 2));
+            });
+    })*/;
 };
