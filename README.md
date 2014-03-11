@@ -23,3 +23,7 @@ $ npmup
 
 [npm-url]: https://npmjs.org/package/npmup
 [npm-image]: https://badge.fury.io/js/npmup.png
+
+## License
+
+MIT (c) Vsevolod Strukchinsky

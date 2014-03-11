@@ -1,7 +1,7 @@
 {
-  "name": "update-my-deps",
+  "name": "npmup",
   "version": "0.0.5",
-  "description": "update-my-deps",
+  "description": "Cli tool to overview dependencies in package.json",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/floatdrop/update-my-deps.git"
+    "url": "git://github.com/floatdrop/npmup.git"
   },
   "author": "Vsevolod Strukchinsky <floatdrop@gmail.com>",
   "license": "MIT",
@@ -20,9 +20,6 @@
   },
   "homepage": "https://github.com/floatdrop/update-my-deps",
   "dependencies": {
-    "request": "~2.33.0",
-    "inquirer": "~0.4.0",
-    "lodash": "~2.4.1",
     "semver": "~2.2.1",
     "bluebird": "~1.1.0",
     "needle": "~0.6.6",
