@@ -1,24 +1,23 @@
-# update-my-deps [![NPM version][npm-image]][npm-url]
-> Cli tool to update dependencies in json files
+# npmup [![NPM version][npm-image]][npm-url]
+> Cli tool to overview dependencies in package.json
 
-To keep things simple - this will update only **strict fixed** versions.
+## Installation
 
-<p align="center">
-    <img src="https://f.cloud.github.com/assets/365089/2074077/9432f5e2-8d70-11e3-8ad8-f55c5edebaf7.png" />
-</p>
-
-## Example
-
-```js
-var umd = require('update-my-deps');
-
-umd(
-    'package.json', 
-    'https://raw.github.com/floatdrop/update-my-deps/master/package.json', 
-    function () { 
-        console.log('done'); 
-});
+```bash
+$ npm i npmup -g
 ```
 
-[npm-url]: https://npmjs.org/package/update-my-deps
-[npm-image]: https://badge.fury.io/js/update-my-deps.png
+## Usage
+
+```bash
+$ npmup
+  Dependency    Required    Stable    Latest
+! express       ~3.4.4      3.4.8     3.5.0
+  lodash        ~2.4.1      2.4.1     2.4.1
+  mkdirp        ~0.3.5      0.3.5     0.3.5
+! npmlog        0.0.2       0.0.2     0.0.6
+  recluster     ~0.3.4      0.3.6     0.3.6
+```
+
+[npm-url]: https://npmjs.org/package/npmup
+[npm-image]: https://badge.fury.io/js/npmup.png

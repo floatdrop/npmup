@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "recluster": "~0.3.6",
+    "mkdirp": "~0.3.5",
+    "lodash": "~2.4.1",
+    "express": "3.4.5"
+  }
+}
