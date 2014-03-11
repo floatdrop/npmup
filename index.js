@@ -1,18 +1,26 @@
 'use strict';
 
-var fs = Promise.promisifyAll(require('fs')),
+var Promise = require('bluebird'),
+    fs = Promise.promisifyAll(require('fs')),
     needle = Promise.promisifyAll(require('needle')),
-    Promise = require('bluebird'),
-    chalk = require('chalk'),
     path = require('path'),
-    url = require('url');
+    url = require('url'),
+    is = require('is');
+
+require('colors');
 
 var registry = url.parse(process.env.NPM_REGISTRY || 'https://registry.npmjs.org');
 
 function parseJson(response) {
+    if (is.array(response)) { response = response[0]; }
+    if (response.body) { response = response.body; }
+    if (response instanceof Buffer) { response = response.toString(); }
+    if (!is.string(response)) {
+        return response;
+    }
     return new Promise(function (resolve, reject) {
         try {
-            resolve(JSON.parse(response.body));
+            resolve(JSON.parse(response));
         } catch (e) {
             reject(e);
         }
@@ -21,26 +29,30 @@ function parseJson(response) {
 
 function getDependencies(json) {
     return new Promise(function (resolve, reject) {
-        if (!json.dependencies) { return reject(new Error('Dependencies not found')); }
+        if (!json.dependencies) {
+            return reject(new Error('Dependencies not found'));
+        }
         resolve(json.dependencies);
     });
 }
 
 function getSourceDependencies(source) {
     return fs.readFileAsync(source)
+        .then(parseJson)
         .then(getDependencies);
 }
 
 function getFreshJsons(dependencies) {
+    var fresh = {};
     return Promise.all(Object.keys(dependencies).map(function (index) {
         registry.pathname = index;
         return needle.getAsync(url.format(registry))
             .then(parseJson)
             .then(function (json) {
-                dependencies[index] = json;
+                fresh[index] = json;
             });
     })).then(function () {
-        return dependencies;
+        return fresh;
     });
 }
 
@@ -48,13 +60,15 @@ function filterFresh(results) {
     var fresh = {};
     Object.keys(results.local).map(function (index) {
         if (!(index in results.fresh)) { fresh[index] = results.local[index]; }
-        var versions = Object.keys[results.fresh[index]];
+        var versions = Object.keys(results.fresh[index].versions);
         fresh[index] = versions.pop(); // Get last version for now
     });
+    results.fresh = fresh;
+    return results;
 }
 
 function showDiff(results) {
-    console.log(chalk.gray(path.relative(process.cwd(), results.source)));
+    console.log(path.relative(process.cwd(), results.source).grey);
     Object.keys(results.local).forEach(function (index) {
         console.log(index + ': ' + results.local[index] + ' -> ' + results.fresh[index]);
     });
@@ -85,7 +99,7 @@ module.exports = function (source, url) {
         .then(parseJson)
         .then(getDependencies);
 
-    return Promise.all({
+    return Promise.props({
         remote: remoteDeps,
         fresh: getSourceDependencies(source).then(getFreshJsons),
         local: getSourceDependencies(source),
