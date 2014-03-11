@@ -5,7 +5,6 @@ var Promise = require('bluebird'),
     fs = Promise.promisifyAll(require('fs')),
     Table = require('cli-table'),
     semver = require('semver'),
-    path = require('path'),
     url = require('url'),
     is = require('is');
 
@@ -90,8 +89,6 @@ function getColor(stable, latest) {
 }
 
 function showDiff(results) {
-    console.log(path.relative(process.cwd(), results.source) + ':');
-
     var size = 0;
     Object.keys(results.local).forEach(function (key) {
         size = Math.max(size, key.length + 2);
@@ -99,7 +96,11 @@ function showDiff(results) {
 
     var table = new Table({
         head: ['Dependency', 'Required', 'Stable', 'Latest'],
-        chars: NONE
+        chars: NONE,
+        style: {
+            head: ['white'],
+            'padding-left': 2
+        }
     });
 
     Object.keys(results.local).sort().forEach(function (index) {
@@ -109,7 +110,7 @@ function showDiff(results) {
 
         var color = getColor(stable, latest);
 
-        table.push([index[color], required, stable, latest]);
+        table.push([index[color], required[color], stable[color], latest[color]]);
     });
 
     console.log(table.toString());
@@ -117,27 +118,7 @@ function showDiff(results) {
     return results;
 }
 
-function promptUser(results) {
-    return new Promise(function (resolve) {
-        require('inquirer').prompt([{
-            type: 'confirm',
-            name: 'merge',
-            default: results.safe,
-            message: 'Are you sure to merge this changes?'
-        }], function (answer) {
-            if (answer.merge) {
-                return resolve(results);
-            }
-            console.log('Cancelled'.grey);
-        });
-    });
-}
-
-function merge(results) {
-    return results;
-}
-
-module.exports = function (source, url) {
+module.exports = function (source) {
     return Promise.props({
         recent: getSourceDependencies(source).then(getJsonsFromRegistry),
         local: getSourceDependencies(source),
