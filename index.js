@@ -3,10 +3,10 @@
 var Promise = require('bluebird'),
     needle = Promise.promisifyAll(require('needle')),
     fs = Promise.promisifyAll(require('fs')),
+    Table = require('cli-table'),
     semver = require('semver'),
     path = require('path'),
     url = require('url'),
-    pad = require('pad'),
     is = require('is');
 
 require('colors');
@@ -77,6 +77,18 @@ function parseVersions(depsConditionsKey, key, results) {
     return results;
 }
 
+function getColor(stable, latest) {
+    var color = 'grey';
+    stable = semver.parse(stable);
+    latest = semver.parse(latest);
+
+    if (stable.patch < latest.patch) { color = 'green'; }
+    if (stable.minor < latest.minor) { color = 'yellow'; }
+    if (stable.major < latest.major) { color = 'red'; }
+
+    return color;
+}
+
 function showDiff(results) {
     console.log(path.relative(process.cwd(), results.source) + ':');
 
@@ -85,20 +97,22 @@ function showDiff(results) {
         size = Math.max(size, key.length + 2);
     });
 
-    Object.keys(results.local).sort().forEach(function (index) {
-        var color = 'grey';
-        var from = results.local[index];
-        var latest = results.latest[index];
-        var recommended = results.recommended[index];
-        var remote = results.remote[index];
-
-        if (!remote) { return; }
-
-        if (recommended !== latest) { color = 'yellow'; }
-
-        var to = remote || ('~' + latest);
-        console.log((pad(size, index) + '@' + latest)[color] + ': ' + from + ' -> ' + to);
+    var table = new Table({
+        head: ['Dependency', 'Required', 'Stable', 'Latest'],
+        chars: NONE
     });
+
+    Object.keys(results.local).sort().forEach(function (index) {
+        var required = results.local[index];
+        var stable = results.stable[index];
+        var latest = results.latest[index];
+
+        var color = getColor(stable, latest);
+
+        table.push([index[color], required, stable, latest]);
+    });
+
+    console.log(table.toString());
 
     return results;
 }
@@ -124,34 +138,18 @@ function merge(results) {
 }
 
 module.exports = function (source, url) {
-    process.stdout.write('[' + 'info'.yellow + '] Fetching ' + url.grey);
-
-    var remoteDeps = needle.getAsync(url)
-        .then(function (response) {
-            process.stdout.write(' ' + '✓'.green + '\n');
-            return response;
-        })
-        .then(parseJson)
-        .then(getDependencies);
-
     return Promise.props({
-        remote: remoteDeps,
         recent: getSourceDependencies(source).then(getJsonsFromRegistry),
         local: getSourceDependencies(source),
         source: source,
         safe: false
     })
-    .then(parseVersions.bind(null, 'local', 'latest'))
-    .then(parseVersions.bind(null, 'remote', 'recommended'))
-    .then(showDiff)
-    .then(promptUser)
-    .then(merge)
-    .then(function (results) {
-        return fs.readFileAsync(source)
-            .then(parseJson)
-            .then(function (json) {
-                json.dependencies = results.merged;
-                return fs.writeFileAsync(source, JSON.stringify(json, undefined, 2));
-            });
-    });
+    .then(parseVersions.bind(null, '', 'latest'))
+    .then(parseVersions.bind(null, 'local', 'stable'))
+    .then(showDiff);
 };
+
+var NONE = { 'top': '', 'top-mid': '', 'top-left': '', 'top-right': '',
+    'bottom': '', 'bottom-mid': '', 'bottom-left': '', 'bottom-right': '',
+    'left': '', 'left-mid': '', 'mid': '', 'mid-mid': '',
+    'right': '', 'right-mid': '', 'middle': ' ' };
