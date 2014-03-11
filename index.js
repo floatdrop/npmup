@@ -1,10 +1,11 @@
 'use strict';
 
 var Promise = require('bluebird'),
-    fs = Promise.promisifyAll(require('fs')),
     needle = Promise.promisifyAll(require('needle')),
+    fs = Promise.promisifyAll(require('fs')),
     path = require('path'),
     url = require('url'),
+    pad = require('pad'),
     is = require('is');
 
 require('colors');
@@ -42,35 +43,35 @@ function getSourceDependencies(source) {
         .then(getDependencies);
 }
 
-function getFreshJsons(dependencies) {
-    var fresh = {};
+function getJsonsFromRegistry(dependencies) {
+    var recent = {};
     return Promise.all(Object.keys(dependencies).map(function (index) {
         registry.pathname = index;
         return needle.getAsync(url.format(registry))
             .then(parseJson)
             .then(function (json) {
-                fresh[index] = json;
+                recent[index] = json;
             });
     })).then(function () {
-        return fresh;
+        return recent;
     });
 }
 
-function filterFresh(results) {
-    var fresh = {};
+function parseRecentVersions(results) {
+    var recent = {};
     Object.keys(results.local).map(function (index) {
-        if (!(index in results.fresh)) { fresh[index] = results.local[index]; }
-        var versions = Object.keys(results.fresh[index].versions);
-        fresh[index] = versions.pop(); // Get last version for now
+        if (!(index in results.recent)) { recent[index] = results.local[index]; }
+        var versions = Object.keys(results.recent[index].versions);
+        recent[index] = versions.pop(); // Get last version for now
     });
-    results.fresh = fresh;
+    results.recent = recent;
     return results;
 }
 
 function showDiff(results) {
     console.log(path.relative(process.cwd(), results.source).grey);
     Object.keys(results.local).forEach(function (index) {
-        console.log(index + ': ' + results.local[index] + ' -> ' + results.fresh[index]);
+        console.log(pad(24, index) + ': ' + results.local[index] + ' -> ' + results.recent[index]);
     });
     return results;
 }
@@ -102,12 +103,12 @@ module.exports = function (source, url) {
 
     return Promise.props({
         remote: remoteDeps,
-        fresh: getSourceDependencies(source).then(getFreshJsons),
+        recent: getSourceDependencies(source).then(getJsonsFromRegistry),
         local: getSourceDependencies(source),
         source: source,
         safe: false
     })
-    .then(filterFresh)
+    .then(parseRecentVersions)
     .then(showDiff)
     .then(promptUser)
     .then(merge)
