@@ -72,10 +72,11 @@ function showDiff(results) {
     Object.keys(results.local).forEach(function (index) {
         console.log(index + ': ' + results.local[index] + ' -> ' + results.fresh[index]);
     });
+    return results;
 }
 
 function promptUser(results) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve) {
         require('inquirer').prompt([{
             type: 'confirm',
             name: 'merge',
@@ -85,13 +86,13 @@ function promptUser(results) {
             if (answer.merge) {
                 return resolve(results);
             }
-            reject(new Error('Cancelled'));
+            console.log('Cancelled'.grey);
         });
     });
 }
 
-function merge() {
-
+function merge(results) {
+    return results;
 }
 
 module.exports = function (source, url) {
@@ -103,11 +104,12 @@ module.exports = function (source, url) {
         remote: remoteDeps,
         fresh: getSourceDependencies(source).then(getFreshJsons),
         local: getSourceDependencies(source),
-        source: source
+        source: source,
+        safe: false
     })
     .then(filterFresh)
     .then(showDiff)
-    /*.then(promptUser)
+    .then(promptUser)
     .then(merge)
     .then(function (results) {
         return fs.readFileAsync(source)
@@ -116,5 +118,5 @@ module.exports = function (source, url) {
                 json.dependencies = results.merged;
                 return fs.writeFileAsync(source, JSON.stringify(json, undefined, 2));
             });
-    })*/;
+    });
 };
