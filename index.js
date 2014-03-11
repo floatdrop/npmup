@@ -77,7 +77,7 @@ function parseVersions(depsConditionsKey, key, results) {
 }
 
 function getColor(stable, latest) {
-    var color = 'grey';
+    var color;
     stable = semver.parse(stable);
     latest = semver.parse(latest);
 
@@ -95,11 +95,12 @@ function showDiff(results) {
     });
 
     var table = new Table({
-        head: ['Dependency', 'Required', 'Stable', 'Latest'],
+        head: ['', 'Dependency', 'Required', 'Stable', 'Latest'],
         chars: NONE,
         style: {
             head: ['white'],
-            'padding-left': 2
+            'padding-left': 0,
+            'padding-right': 0
         }
     });
 
@@ -108,9 +109,15 @@ function showDiff(results) {
         var stable = results.stable[index];
         var latest = results.latest[index];
 
-        var color = getColor(stable, latest);
+        var color = getColor(stable, latest) || 'grey';
 
-        table.push([index[color], required[color], stable[color], latest[color]]);
+        table.push([
+            color !== 'grey' ? '!' : '',
+            index[color],
+            required[color],
+            stable[color],
+            latest[color]]
+        );
     });
 
     console.log(table.toString());
