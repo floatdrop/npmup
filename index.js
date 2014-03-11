@@ -3,6 +3,7 @@
 var Promise = require('bluebird'),
     needle = Promise.promisifyAll(require('needle')),
     fs = Promise.promisifyAll(require('fs')),
+    semver = require('semver'),
     path = require('path'),
     url = require('url'),
     pad = require('pad'),
@@ -57,22 +58,48 @@ function getJsonsFromRegistry(dependencies) {
     });
 }
 
-function parseRecentVersions(results) {
-    var recent = {};
+function parseVersions(depsConditionsKey, key, results) {
+    var obj = {};
+    var depsConditions = results[depsConditionsKey] || {};
     Object.keys(results.local).map(function (index) {
-        if (!(index in results.recent)) { recent[index] = results.local[index]; }
+
         var versions = Object.keys(results.recent[index].versions);
-        recent[index] = versions.pop(); // Get last version for now
+        var version;
+        versions.forEach(function (v) {
+            if (semver.satisfies(v, depsConditions[index])) {
+                version = v;
+            }
+        });
+
+        obj[index] = version || versions.pop();
     });
-    results.recent = recent;
+    results[key] = obj;
     return results;
 }
 
 function showDiff(results) {
-    console.log(path.relative(process.cwd(), results.source).grey);
-    Object.keys(results.local).forEach(function (index) {
-        console.log(pad(24, index) + ': ' + results.local[index] + ' -> ' + results.recent[index]);
+    console.log(path.relative(process.cwd(), results.source) + ':');
+
+    var size = 0;
+    Object.keys(results.local).forEach(function (key) {
+        size = Math.max(size, key.length + 2);
     });
+
+    Object.keys(results.local).sort().forEach(function (index) {
+        var color = 'grey';
+        var from = results.local[index];
+        var latest = results.latest[index];
+        var recommended = results.recommended[index];
+        var remote = results.remote[index];
+
+        if (!remote) { return; }
+
+        if (recommended !== latest) { color = 'yellow'; }
+
+        var to = remote || ('~' + latest);
+        console.log((pad(size, index) + '@' + latest)[color] + ': ' + from + ' -> ' + to);
+    });
+
     return results;
 }
 
@@ -97,7 +124,13 @@ function merge(results) {
 }
 
 module.exports = function (source, url) {
+    process.stdout.write('[' + 'info'.yellow + '] Fetching ' + url.grey);
+
     var remoteDeps = needle.getAsync(url)
+        .then(function (response) {
+            process.stdout.write(' ' + '✓'.green + '\n');
+            return response;
+        })
         .then(parseJson)
         .then(getDependencies);
 
@@ -108,7 +141,8 @@ module.exports = function (source, url) {
         source: source,
         safe: false
     })
-    .then(parseRecentVersions)
+    .then(parseVersions.bind(null, 'local', 'latest'))
+    .then(parseVersions.bind(null, 'remote', 'recommended'))
     .then(showDiff)
     .then(promptUser)
     .then(merge)

@@ -3,8 +3,6 @@
     "recluster": "~0.3.6",
     "mkdirp": "~0.3.5",
     "lodash": "~2.4.1",
-    "npmlog": "0.0.6",
-    "express": "~3.5.0",
-    "express-error-with-sources": "~1.3.0"
+    "express": "3.4.5"
   }
 }
