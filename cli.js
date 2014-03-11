@@ -1,2 +1,2 @@
-var umd = require('..');
+var umd = require('./index.js');
 umd('package.json');
