@@ -1,6 +1,8 @@
 # npmup [![NPM version][npm-image]][npm-url]
 > Cli tool to overview dependencies in package.json
 
+This is scope reduction result of my `update-my-deps` project. At the end I found out, that I wrote small part of [`david`](https://github.com/alanshaw/david) functionality. Oops.
+
 ![2014-03-11 18-35-40 1 npmupexample zsh](https://f.cloud.github.com/assets/365089/2385186/af7360a2-a919-11e3-96d0-14412f9e1f28.png)
 
 ## Installation
